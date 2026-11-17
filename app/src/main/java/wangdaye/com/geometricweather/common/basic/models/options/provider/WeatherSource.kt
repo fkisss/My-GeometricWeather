@@ -17,7 +17,10 @@ enum class WeatherSource(
     // resolves to the keyless Open-Meteo service (see WeatherServiceSet).
     OWM("owm", -0x1491b5, "open-meteo.com"),
     MF("mf", -0xffa76e, "meteofrance.com"),
-    CAIYUN("caiyun", -0xa14472, " caiyunapp.com");
+    CAIYUN("caiyun", -0xa14472, " caiyunapp.com"),
+    // Xiaomi weather gateway served China Weather Network + CaiYun data; same
+    // service as CAIYUN but exposed as its own entry for discoverability.
+    CHINA("china", -0xcc4a02, "weather.com.cn");
 
     companion object {
 
@@ -25,6 +28,9 @@ enum class WeatherSource(
         fun getInstance(
             value: String
         ): WeatherSource {
+            if (value.lowercase() == "china") {
+                return CHINA
+            }
             if (value.lowercase().contains("owm")) {
                 return OWM
             }

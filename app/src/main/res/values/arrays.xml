@@ -11,18 +11,21 @@
         <item>accuweather.com</item>
         <item>Open-Meteo (free, no API key)</item>
         <item>Météo France</item>
+        <item>中国天气网 (China Weather)</item>
     </string-array>
     <string-array name="weather_source_voices">
         <item>CaiYun App.com</item>
         <item>ACCU weather.com</item>
         <item>Open Meteo</item>
         <item>Météo France</item>
+        <item>China Weather</item>
     </string-array>
     <string-array name="weather_source_values">
         <item>caiyun</item>
         <item>accu</item>
         <item>owm</item>
         <item>mf</item>
+        <item>china</item>
     </string-array>
 
     <!-- Location service. -->

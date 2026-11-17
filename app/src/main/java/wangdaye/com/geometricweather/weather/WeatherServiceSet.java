@@ -38,6 +38,9 @@ public class WeatherServiceSet {
                 return mWeatherServices[2];
 
             case CAIYUN:
+            case CHINA:
+                // Both ids resolve to the Xiaomi weather gateway service
+                // (China Weather Network + CaiYun data).
                 return mWeatherServices[1];
 
             default: // ACCU.

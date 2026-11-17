@@ -42,7 +42,7 @@ public class CaiYunWeatherService extends WeatherService {
                 String.valueOf(location.getLatitude()),
                 String.valueOf(location.getLongitude()),
                 location.isCurrentPosition(),
-                "weathercn%3A" + location.getCityId(),
+                "weathercn:" + location.getCityId(),
                 15,
                 "weather20151024",
                 "zUFJoAR2ZVrDy1vF3D07",
@@ -60,7 +60,7 @@ public class CaiYunWeatherService extends WeatherService {
                 "zh_cn",
                 false,
                 "weather20151024",
-                "weathercn%3A" + location.getCityId(),
+                "weathercn:" + location.getCityId(),
                 "zUFJoAR2ZVrDy1vF3D07"
         );
 
