@@ -3,7 +3,7 @@ package wangdaye.com.geometricweather.weather.json.openmeteo;
 import java.util.List;
 
 /**
- * Open-Meteo /v1/air-quality result (CAMS global/European air quality model).
+ * Open-Meteo /v1/air-quality result (CAMS model, timeformat=unixtime).
  * All pollutant values are in micrograms per cubic metre, the same unit used by
  * the original OpenWeather air-pollution DTO.
  */
@@ -17,7 +17,7 @@ public class OpenMeteoAirQualityResult {
     public Hourly hourly;
 
     public static class Hourly {
-        public List<String> time;
+        public List<Long> time;
         public List<Double> pm10;
         public List<Double> pm2_5;
         public List<Double> carbon_monoxide;
@@ -26,6 +26,5 @@ public class OpenMeteoAirQualityResult {
         public List<Double> ozone;
         public List<Double> ammonia;
         public List<Double> us_aqi;
-        public List<Double> european_aqi;
     }
 }

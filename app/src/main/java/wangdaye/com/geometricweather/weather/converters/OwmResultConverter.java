@@ -53,7 +53,8 @@ public class OwmResultConverter {
                     Double.toString(result.lat) + ',' + Double.toString(result.lon),
                     (float) result.lat,
                     (float) result.lon,
-                    TimeZone.getTimeZone("UTC"),
+                    TimeZone.getTimeZone(TextUtils.isEmpty(result.timezone)
+                    ? "UTC" : result.timezone),
                     result.country,
                     "",
                     result.name,
@@ -75,7 +76,8 @@ public class OwmResultConverter {
                     Double.toString(result.lat) + ',' + Double.toString(result.lon),
                     (float) result.lat,
                     (float) result.lon,
-                    TimeZone.getTimeZone("UTC"),
+                    TimeZone.getTimeZone(TextUtils.isEmpty(result.timezone)
+                    ? "UTC" : result.timezone),
                     result.country,
                     "",
                     result.name,

@@ -40,25 +40,30 @@ public class OpenMeteoWeatherService extends WeatherService {
 
     private static final int FORECAST_DAYS = 7;
     private static final String TIMEZONE = "auto";
+    // Same trick as Breezy Weather: let the API return real unix timestamps
+    // instead of timezone-aware ISO strings, so no offset arithmetic is needed.
+    private static final String TIMEFORMAT = "unixtime";
     private static final String WIND_UNIT = "ms"; // m/s, same as OWM metric
 
     private static final String CURRENT_FIELDS =
             "temperature_2m,relative_humidity_2m,apparent_temperature,is_day,"
                     + "precipitation,rain,showers,snowfall,weather_code,cloud_cover,"
-                    + "surface_pressure,wind_speed_10m,wind_direction_10m,wind_gusts_10m";
+                    + "pressure_msl,wind_speed_10m,wind_direction_10m,wind_gusts_10m";
 
     private static final String HOURLY_FIELDS =
             "temperature_2m,relative_humidity_2m,apparent_temperature,"
                     + "precipitation_probability,precipitation,rain,showers,snowfall,"
                     + "weather_code,visibility,wind_speed_10m,wind_direction_10m,"
-                    + "uv_index,is_day,dew_point_2m,cloud_cover,surface_pressure";
+                    + "uv_index,is_day,dew_point_2m,cloud_cover,pressure_msl";
 
     private static final String DAILY_FIELDS =
             "weather_code,temperature_2m_max,temperature_2m_min,"
                     + "apparent_temperature_max,apparent_temperature_min,sunrise,sunset,"
                     + "uv_index_max,precipitation_sum,rain_sum,showers_sum,snowfall_sum,"
                     + "precipitation_probability_max,wind_speed_10m_max,"
-                    + "wind_direction_10m_dominant";
+                    + "wind_direction_10m_dominant,"
+                    + "pressure_msl_mean,relative_humidity_2m_mean,"
+                    + "dew_point_2m_mean,cloud_cover_mean";
 
     private static final String AIR_QUALITY_FIELDS =
             "pm10,pm2_5,carbon_monoxide,nitrogen_dioxide,sulphur_dioxide,ozone,"
@@ -87,14 +92,14 @@ public class OpenMeteoWeatherService extends WeatherService {
                 BuildConfig.OPEN_METEO_FORECAST_URL,
                 latitude, longitude,
                 CURRENT_FIELDS, HOURLY_FIELDS, DAILY_FIELDS,
-                TIMEZONE, FORECAST_DAYS, WIND_UNIT
+                TIMEZONE, TIMEFORMAT, FORECAST_DAYS, WIND_UNIT
         );
 
         // Air quality is optional: a failure must never break the weather request.
         Observable<OpenMeteoAirQualityResult> airQuality = mApi.getAirQuality(
                 BuildConfig.OPEN_METEO_AIR_QUALITY_URL,
                 latitude, longitude,
-                AIR_QUALITY_FIELDS, TIMEZONE, FORECAST_DAYS
+                AIR_QUALITY_FIELDS, TIMEZONE, TIMEFORMAT, FORECAST_DAYS
         ).onExceptionResumeNext(
                 Observable.<OpenMeteoAirQualityResult>just(new EmptyAqiResult())
         );

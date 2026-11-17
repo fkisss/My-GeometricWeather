@@ -1,9 +1,7 @@
 package wangdaye.com.geometricweather.weather.converters;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
@@ -21,11 +19,11 @@ import wangdaye.com.geometricweather.weather.json.owm.OwmOneCallResult;
  * Reusing {@link OwmResultConverter} keeps the whole mapping into the app's
  * Weather model (Base/Current/Daily/Hourly/Alerts/AirQuality) untouched, so
  * this source behaves exactly like a working OWM source without an API key.
+ *
+ * The request uses timeformat=unixtime, so every time field is already a real
+ * unix timestamp in seconds - no ISO parsing and no utc-offset arithmetic.
  */
 public class OpenMeteoResultConverter {
-
-    private static final String PATTERN_MINUTE = "yyyy-MM-dd'T'HH:mm";
-    private static final String PATTERN_DAY = "yyyy-MM-dd";
 
     // ------------------------------------------------------------------
     // Public API
@@ -36,39 +34,41 @@ public class OpenMeteoResultConverter {
             return null;
         }
 
-        final int offset = src.utc_offset_seconds;
-        final List<String> hourTimes = src.hourly.time;
-        final List<String> dayTimes = src.daily.time;
+        final List<Long> hourTimes = src.hourly.time;
+        final List<Long> dayTimes = src.daily.time;
         final int hourSize = hourTimes == null ? 0 : hourTimes.size();
         final int daySize = dayTimes == null ? 0 : dayTimes.size();
+        if (hourSize == 0 || daySize == 0) {
+            return null;
+        }
 
         OwmOneCallResult result = new OwmOneCallResult();
         result.lat = src.latitude;
         result.lon = src.longitude;
         result.timezone = src.timezone;
-        result.timezoneOffset = offset;
+        result.timezoneOffset = src.utc_offset_seconds;
 
         // --- current ---
-        long sunrise = epoch(get(src.daily.sunrise, 0), offset, PATTERN_MINUTE);
-        long sunset = epoch(get(src.daily.sunset, 0), offset, PATTERN_MINUTE);
-        int hourIndex = currentHourIndex(hourTimes, src.current.time);
+        long sunrise = lng(get(src.daily.sunrise, 0));
+        long sunset = lng(get(src.daily.sunset, 0));
+        int hourIndex = currentHourIndex(hourTimes, lng(src.current.time));
 
         OwmOneCallResult.Current current = new OwmOneCallResult.Current();
-        current.dt = epoch(src.current.time, offset, PATTERN_MINUTE);
+        current.dt = lng(src.current.time);
         current.sunrise = sunrise;
         current.sunset = sunset;
         current.temp = nz(src.current.temperature_2m);
         current.feelsLike = nz(src.current.apparent_temperature);
-        current.pressure = (int) nz(src.current.surface_pressure);
-        current.humidity = integer(src.current.relative_humidity_2m);
+        current.pressure = (int) nz(src.current.pressure_msl);
+        current.humidity = (int) nz(src.current.relative_humidity_2m);
         current.dewPoint = dbl(src.hourly.dew_point_2m, hourIndex);
         current.uvi = dbl(src.hourly.uv_index, hourIndex);
-        current.clouds = integer(src.current.cloud_cover);
+        current.clouds = (int) nz(src.current.cloud_cover);
         current.visibility = (int) dbl(src.hourly.visibility, hourIndex);
         current.windSpeed = (float) nz(src.current.wind_speed_10m);
-        current.windDeg = integer(src.current.wind_direction_10m);
+        current.windDeg = (int) nz(src.current.wind_direction_10m);
         current.weather = Collections.singletonList(
-                buildWeather(integer(src.current.weather_code), chinese));
+                buildWeather((int) nz(src.current.weather_code), chinese));
         current.rain = precipitation(nz(src.current.rain));
         // Open-Meteo reports snowfall in centimetres, OWM expects millimetres.
         current.snow = precipitation(nz(src.current.snowfall) * 10d);
@@ -78,20 +78,20 @@ public class OpenMeteoResultConverter {
         result.hourly = new ArrayList<>(hourSize);
         for (int i = 0; i < hourSize; i++) {
             OwmOneCallResult.Hourly hourly = new OwmOneCallResult.Hourly();
-            hourly.dt = epoch(get(hourTimes, i), offset, PATTERN_MINUTE);
+            hourly.dt = lng(get(hourTimes, i));
             hourly.temp = dbl(src.hourly.temperature_2m, i);
             hourly.feelsLike = dbl(src.hourly.apparent_temperature, i);
-            hourly.pressure = (int) dbl(src.hourly.surface_pressure, i);
-            hourly.humidity = integer(src.hourly.relative_humidity_2m, i);
+            hourly.pressure = (int) dbl(src.hourly.pressure_msl, i);
+            hourly.humidity = (int) dbl(src.hourly.relative_humidity_2m, i);
             hourly.dewPoint = dbl(src.hourly.dew_point_2m, i);
             hourly.uvi = dbl(src.hourly.uv_index, i);
-            hourly.clouds = integer(src.hourly.cloud_cover, i);
+            hourly.clouds = (int) dbl(src.hourly.cloud_cover, i);
             hourly.visibility = (int) dbl(src.hourly.visibility, i);
             hourly.windSpeed = (float) dbl(src.hourly.wind_speed_10m, i);
-            hourly.windDeg = integer(src.hourly.wind_direction_10m, i);
+            hourly.windDeg = (int) dbl(src.hourly.wind_direction_10m, i);
             hourly.weather = Collections.singletonList(
-                    buildWeather(integer(src.hourly.weather_code, i), chinese));
-            hourly.pop = integer(src.hourly.precipitation_probability, i) / 100f;
+                    buildWeather((int) dbl(src.hourly.weather_code, i), chinese));
+            hourly.pop = (float) (dbl(src.hourly.precipitation_probability, i) / 100d);
             hourly.rain = precipitation(dbl(src.hourly.rain, i));
             hourly.snow = precipitation(dbl(src.hourly.snowfall, i) * 10d);
             result.hourly.add(hourly);
@@ -101,9 +101,9 @@ public class OpenMeteoResultConverter {
         result.daily = new ArrayList<>(daySize);
         for (int i = 0; i < daySize; i++) {
             OwmOneCallResult.Daily daily = new OwmOneCallResult.Daily();
-            daily.dt = epoch(get(dayTimes, i), offset, PATTERN_DAY);
-            daily.sunrise = epoch(get(src.daily.sunrise, i), offset, PATTERN_MINUTE);
-            daily.sunset = epoch(get(src.daily.sunset, i), offset, PATTERN_MINUTE);
+            daily.dt = lng(get(dayTimes, i));
+            daily.sunrise = lng(get(src.daily.sunrise, i));
+            daily.sunset = lng(get(src.daily.sunset, i));
 
             OwmOneCallResult.Daily.Temp temp = new OwmOneCallResult.Daily.Temp();
             temp.day = dbl(src.daily.temperature_2m_max, i);
@@ -121,15 +121,15 @@ public class OpenMeteoResultConverter {
             feelsLike.eve = feelsLike.day;
             daily.feelsLike = feelsLike;
 
-            daily.pressure = 0;
-            daily.humidity = 0;
-            daily.dewPoint = 0;
-            daily.clouds = 0;
+            daily.pressure = (int) dbl(src.daily.pressure_msl_mean, i);
+            daily.humidity = (int) dbl(src.daily.relative_humidity_2m_mean, i);
+            daily.dewPoint = dbl(src.daily.dew_point_2m_mean, i);
+            daily.clouds = (int) dbl(src.daily.cloud_cover_mean, i);
             daily.windSpeed = (float) dbl(src.daily.wind_speed_10m_max, i);
-            daily.windDeg = integer(src.daily.wind_direction_10m_dominant, i);
+            daily.windDeg = (int) dbl(src.daily.wind_direction_10m_dominant, i);
             daily.weather = Collections.singletonList(
-                    buildWeather(integer(src.daily.weather_code, i), chinese));
-            daily.pop = integer(src.daily.precipitation_probability_max, i) / 100f;
+                    buildWeather((int) dbl(src.daily.weather_code, i), chinese));
+            daily.pop = (float) (dbl(src.daily.precipitation_probability_max, i) / 100d);
             daily.rain = (float) dbl(src.daily.rain_sum, i);
             daily.snow = (float) (dbl(src.daily.snowfall_sum, i) * 10d);
             daily.uvi = dbl(src.daily.uv_index_max, i);
@@ -155,12 +155,14 @@ public class OpenMeteoResultConverter {
         for (int i = 0; i < size; i++) {
             OwmAirPollutionResult.AirPollution pollution =
                     new OwmAirPollutionResult.AirPollution();
-            pollution.dt = epoch(get(src.hourly.time, i), src.utc_offset_seconds, PATTERN_MINUTE);
+            pollution.dt = lng(get(src.hourly.time, i));
 
             OwmAirPollutionResult.AirPollution.Main main =
                     new OwmAirPollutionResult.AirPollution.Main();
-            Double aqi = get(src.hourly.us_aqi, i);
-            main.aqi = aqi == null ? 0 : aqi.intValue();
+            // The OWM converter expects the OWM 1-5 index scale, so translate
+            // the US AQI (0-500) into that scale before handing it over.
+            Double usAqi = get(src.hourly.us_aqi, i);
+            main.aqi = usAqi == null ? 0 : usAqiToOwmIndex(usAqi);
             pollution.main = main;
 
             OwmAirPollutionResult.AirPollution.Components components =
@@ -247,33 +249,34 @@ public class OpenMeteoResultConverter {
         return p;
     }
 
-    /** ISO-8601 local time (timezone=auto) -> real epoch seconds. */
-    private static long epoch(String localIso, int utcOffsetSeconds, String pattern) {
-        if (localIso == null || localIso.length() == 0) {
-            return 0L;
-        }
-        SimpleDateFormat format = new SimpleDateFormat(pattern, Locale.US);
-        format.setTimeZone(TimeZone.getTimeZone("UTC"));
-        try {
-            Date date = format.parse(localIso);
-            return date == null ? 0L : date.getTime() / 1000L - utcOffsetSeconds;
-        } catch (Exception ignored) {
-            return 0L;
+    /** US AQI (0-500) -> OWM pollution index (1-5). */
+    private static int usAqiToOwmIndex(double usAqi) {
+        if (usAqi <= 50) {
+            return 1;
+        } else if (usAqi <= 100) {
+            return 2;
+        } else if (usAqi <= 150) {
+            return 3;
+        } else if (usAqi <= 200) {
+            return 4;
+        } else {
+            return 5;
         }
     }
 
-    private static int currentHourIndex(List<String> times, String currentTime) {
-        if (times == null || times.isEmpty() || currentTime == null || currentTime.length() < 13) {
+    /** The hour whose timestamp is the latest one not after the current time. */
+    private static int currentHourIndex(List<Long> times, long currentTime) {
+        if (times == null || times.isEmpty()) {
             return 0;
         }
-        String prefix = currentTime.substring(0, 13);
-        for (int i = times.size() - 1; i >= 0; i--) {
-            String time = times.get(i);
-            if (time != null && time.startsWith(prefix)) {
-                return i;
+        int found = 0;
+        for (int i = 0; i < times.size(); i++) {
+            Long time = times.get(i);
+            if (time != null && time <= currentTime) {
+                found = i;
             }
         }
-        return 0;
+        return found;
     }
 
     private static <T> T get(List<T> list, int index) {
@@ -283,18 +286,13 @@ public class OpenMeteoResultConverter {
         return list.get(index);
     }
 
+    private static long lng(Long value) {
+        return value == null ? 0L : value;
+    }
+
     private static double dbl(List<Double> list, int index) {
         Double value = get(list, index);
         return value == null ? 0d : value;
-    }
-
-    private static int integer(List<Integer> list, int index) {
-        Integer value = get(list, index);
-        return value == null ? 0 : value;
-    }
-
-    private static int integer(Integer value) {
-        return value == null ? 0 : value;
     }
 
     private static double nz(Double value) {

@@ -27,6 +27,7 @@ public interface OpenMeteoApi {
             @Query("hourly") String hourly,
             @Query("daily") String daily,
             @Query("timezone") String timezone,
+            @Query("timeformat") String timeformat,
             @Query("forecast_days") int forecastDays,
             @Query("wind_speed_unit") String windSpeedUnit
     );
@@ -38,6 +39,7 @@ public interface OpenMeteoApi {
             @Query("longitude") double longitude,
             @Query("hourly") String hourly,
             @Query("timezone") String timezone,
+            @Query("timeformat") String timeformat,
             @Query("forecast_days") int forecastDays
     );
 
