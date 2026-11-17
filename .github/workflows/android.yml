@@ -26,10 +26,13 @@ jobs:
           java-version: '11'
           cache: gradle
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-
       - name: Install Android platform / build tools
+        env:
+          # Newer cmdline-tools sdkmanager requires JDK 17; the Gradle build
+          # itself still runs on JDK 11. Skip the version check only here.
+          # (android-actions/setup-android was removed: its license step failed
+          # under JDK 11 for the same reason, and the SDK is preinstalled.)
+          SKIP_JDK_VERSION_CHECK: 'true'
         run: |
           sdkmanager --install "platforms;android-32" "build-tools;30.0.3" "platform-tools" > /dev/null
           yes | sdkmanager --licenses > /dev/null || true
