@@ -108,7 +108,10 @@ class SettingsManager private constructor(context: Context) {
             notifySettingsChanged()
         }
         get() = WeatherSource.getInstance(
-            config.getString("weather_source", "accu") ?: ""
+            // Default to Open-Meteo (id "owm" kept for backwards compatibility):
+            // keyless, worldwide and still alive. The original "accu" default
+            // points at a revoked AccuWeather key and always fails.
+            config.getString("weather_source", "owm") ?: ""
         )
 
     var locationProvider: LocationProvider

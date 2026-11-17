@@ -13,7 +13,9 @@ enum class WeatherSource(
 ): VoiceEnum {
 
     ACCU("accu", -0x10a7dd, "accuweather.com"),
-    OWM("owm", -0x1491b5, "openweathermap.org"),
+    // "owm" is kept as the persisted id for backwards compatibility, but it now
+    // resolves to the keyless Open-Meteo service (see WeatherServiceSet).
+    OWM("owm", -0x1491b5, "open-meteo.com"),
     MF("mf", -0xffa76e, "meteofrance.com"),
     CAIYUN("caiyun", -0xa14472, " caiyunapp.com");
 

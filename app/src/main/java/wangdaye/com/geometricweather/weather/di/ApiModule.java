@@ -14,6 +14,7 @@ import wangdaye.com.geometricweather.weather.apis.AtmoAuraIqaApi;
 import wangdaye.com.geometricweather.weather.apis.CaiYunApi;
 import wangdaye.com.geometricweather.weather.apis.MfWeatherApi;
 import wangdaye.com.geometricweather.weather.apis.OwmApi;
+import wangdaye.com.geometricweather.weather.apis.OpenMeteoApi;
 
 @InstallIn(SingletonComponent.class)
 @Module
@@ -43,6 +44,20 @@ public class ApiModule {
                 .addCallAdapterFactory(callAdapterFactory)
                 .build()
                 .create((OwmApi.class));
+    }
+
+    /** Keyless Open-Meteo endpoints (forecast / air-quality / geocoding). */
+    @Provides
+    public OpenMeteoApi provideOpenMeteoApi(OkHttpClient client,
+                                           GsonConverterFactory converterFactory,
+                                           RxJava2CallAdapterFactory callAdapterFactory) {
+        return new Retrofit.Builder()
+                .baseUrl("https://api.open-meteo.com/")
+                .client(client)
+                .addConverterFactory(converterFactory)
+                .addCallAdapterFactory(callAdapterFactory)
+                .build()
+                .create(OpenMeteoApi.class);
     }
 
     @Provides

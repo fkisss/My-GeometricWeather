@@ -9,9 +9,10 @@ buildscript {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
     repositories {
-        jcenter()
-        mavenCentral()
         google()
+        mavenCentral()
+        // jcenter() was shut down; this mirror keeps legacy artifacts available.
+        maven { url 'https://maven.aliyun.com/repository/public' }
     }
 }
 
@@ -19,7 +20,7 @@ allprojects {
     repositories {
         google()
         mavenCentral()
-        jcenter()
+        maven { url 'https://maven.aliyun.com/repository/public' }
         maven {
             url "https://jitpack.io"
         }

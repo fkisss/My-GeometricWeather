@@ -19,7 +19,8 @@ android {
             abiFilters "armeabi", "x86", "armeabi-v7a", "x86_64", "arm64-v8a"
         }
     }
-    ndkVersion "22.0.6917172"
+    // ndkVersion removed: the fdroid flavor has no native code, and pinning an
+    // NDK forces GitHub Actions to download it before configuration succeeds.
     buildFeatures {
         viewBinding true
         compose true
@@ -57,6 +58,9 @@ android {
         it.buildConfigField "String", "IQA_ATMO_AURA_KEY", IQA_ATMO_AURA_KEY
         it.buildConfigField "String", "IQA_ATMO_AURA_URL", IQA_ATMO_AURA_URL
         it.buildConfigField "String", "IQA_ATMO_SUD_URL", IQA_ATMO_SUD_URL
+        it.buildConfigField "String", "OPEN_METEO_FORECAST_URL", OPEN_METEO_FORECAST_URL
+        it.buildConfigField "String", "OPEN_METEO_AIR_QUALITY_URL", OPEN_METEO_AIR_QUALITY_URL
+        it.buildConfigField "String", "OPEN_METEO_GEOCODING_URL", OPEN_METEO_GEOCODING_URL
     }
     lintOptions {
         checkReleaseBuilds false
@@ -110,11 +114,8 @@ android {
         gplay {
             dimension "store"
             versionNameSuffix "_gplay"
-            repositories {
-                maven {
-                    url "https://dl.bintray.com/qichuan/maven/"
-                }
-            }
+            // The original dl.bintray.com repository was shut down; the
+            // dependency is now resolved from the repositories declared below.
         }
         fdroid {
             dimension "store"
@@ -127,7 +128,7 @@ allprojects {
     repositories {
         google()
         mavenCentral()
-        jcenter()
+        maven { url 'https://maven.aliyun.com/repository/public' }
         maven {
             url "https://jitpack.io"
         }

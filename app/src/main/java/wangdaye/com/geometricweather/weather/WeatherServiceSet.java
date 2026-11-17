@@ -8,7 +8,7 @@ import wangdaye.com.geometricweather.common.basic.models.options.provider.Weathe
 import wangdaye.com.geometricweather.weather.services.AccuWeatherService;
 import wangdaye.com.geometricweather.weather.services.CaiYunWeatherService;
 import wangdaye.com.geometricweather.weather.services.MfWeatherService;
-import wangdaye.com.geometricweather.weather.services.OwmWeatherService;
+import wangdaye.com.geometricweather.weather.services.OpenMeteoWeatherService;
 import wangdaye.com.geometricweather.weather.services.WeatherService;
 
 public class WeatherServiceSet {
@@ -19,12 +19,12 @@ public class WeatherServiceSet {
     public WeatherServiceSet(AccuWeatherService accuWeatherService,
                              CaiYunWeatherService caiYunWeatherService,
                              MfWeatherService mfWeatherService,
-                             OwmWeatherService owmWeatherService) {
+                             OpenMeteoWeatherService openMeteoWeatherService) {
         mWeatherServices = new WeatherService[] {
                 accuWeatherService,
                 caiYunWeatherService,
                 mfWeatherService,
-                owmWeatherService
+                openMeteoWeatherService
         };
     }
 
