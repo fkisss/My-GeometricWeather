@@ -34,8 +34,9 @@ jobs:
           # under JDK 11 for the same reason, and the SDK is preinstalled.)
           SKIP_JDK_VERSION_CHECK: 'true'
         run: |
-          sdkmanager --install "platforms;android-32" "build-tools;30.0.3" "platform-tools" > /dev/null
-          yes | sdkmanager --licenses > /dev/null || true
+          SDKM="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          "$SDKM" --install "platforms;android-32" "build-tools;30.0.3" "platform-tools" > /dev/null
+          yes | "$SDKM" --licenses > /dev/null || true
 
       - name: Smoke-test the weather endpoint
         run: |
